@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>feestboek</title>
+    <style>
+        /* Make the main title very large but responsive */
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            /* clamps the size between 48px and 160px, scaling with viewport */
+            font-size: clamp(48px, 12vw, 160px);
+            margin: 0.2em 0;
+            line-height: 1;
+            text-transform: none;
+            text-align: center;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <h1>feestboek</h1>
+</body>
+</html>
