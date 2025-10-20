@@ -1,62 +1,45 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Feestboek</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    html, body { margin:0; padding:0; background:#fff; }
-    #editor {
-      width: min(1100px, 100%);
-      margin: 32px auto;
-      padding: 16px;
-      min-height: 65vh;
-      line-height: 1.5;
-      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      outline: none;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    textarea { width: 100%; height: 60vh; }
+    .status { margin: 8px 0; font-size: 14px; }
   </style>
 </head>
 <body>
-  <div id="editor" contenteditable="true" spellcheck="false"
-       placeholder="Typ hier…"></div>
+  <h1>Feestboek</h1>
+  <div class="status" id="status">Connecting…</div>
+  <textarea id="box" placeholder="Start typing with your friends…"></textarea>
 
-  <!-- Yjs + y-websocket via ESM CDN -->
   <script type="module">
-    import * as Y from "https://cdn.skypack.dev/yjs@13.6.15";
-    import { WebsocketProvider } from "https://cdn.skypack.dev/y-websocket@1.5.4";
+    // Yjs + y-websocket (browser ESM builds)
+    import * as Y from 'https://unpkg.com/yjs@13.6.18/dist/yjs.mjs';
+    import { WebsocketProvider } from 'https://unpkg.com/y-websocket@1.5.4/dist/y-websocket.js?module';
 
-    const docName = "feestboek";
-    const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://")
-                + location.host + "/feestboek-ws";
-
+    // Document
     const ydoc = new Y.Doc();
-    const ytext = ydoc.getText("t");
-    const provider = new WebsocketProvider(wsUrl, docName, ydoc, { connect: true });
+    const room = 'feestboek';
 
-    const el = document.getElementById("editor");
+    // WebSocket endpoint exposed by Caddy:
+    //   handle_path /feestboek/ws* { reverse_proxy 127.0.0.1:7777 }
+    const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/feestboek/ws';
 
-    // Apply remote changes to DOM
-    const render = () => { el.textContent = ytext.toString(); };
-    ytext.observe(render);
-    render();
+    const provider = new WebsocketProvider(wsUrl, room, ydoc);
+    const ytext = ydoc.getText('t');
 
-    // Push DOM edits to Yjs
-    let composing = false;
-    const syncFromDom = () => {
-      if (composing) return;
-      composing = true;
-      ytext.delete(0, ytext.length);
-      ytext.insert(0, el.textContent);
-      composing = false;
-    };
-    el.addEventListener("input", syncFromDom);
-    // Keep caret friendly: reflect remote updates without stealing focus
-    provider.awareness.setLocalStateField("cursor", { t: Date.now() });
-  </script>
-</body>
-</html>
+    const textarea = document.getElementById('box');
+    const statusEl = document.getElementById('status');
+
+    // Update connection status
+    const setStatus = (s) => statusEl.textContent = s;
+    provider.on('status', ({ status }) => setStatus(status === 'connected' ? 'Connected' : 'Disconnected'));
+    setStatus('Connecting…');
+
+    // Initialize local view from shared state
+    textarea.value = ytext.toString();
+
+    // App
