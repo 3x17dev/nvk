@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N V K</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background video -->
+  <video class="bg-video" autoplay muted loop playsinline>
+    <source src="media/nvk/xxxx.mp4" type="video/mp4">
+    <!-- fallback -->
+    </video>
+  
+    <!-- A lightweight overlay prompting interaction when autoplay is blocked -->
+    <div id="play-overlay" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;">
+      <button id="play-btn" style="pointer-events:auto;padding:0.8rem 1.2rem;font-size:1rem;border-radius:6px;border:none;cursor:pointer;display:none;">Play background</button>
+    </div>
+
+  <div class="glitch-wrap">
+    <img src="media/nvk/lgo.png" alt="NVK top logo" class="logo top-logo">
+    <h1 class="glitch" data-text="NVK">NVK</h1>
+    <p class="subtitle">Nieuw-Vlaemsche Kunst</p>
+    <img src="media/nvk/nvk.png" alt="NVK bottom" class="logo bottom-logo">
+  </div>
+  
+    <script>
+      (function(){
+        const video = document.querySelector('.bg-video');
+        // Use an existing logo as a poster so something shows if video can't load
+        const poster = 'media/nvk/lgo.png';
+        video.setAttribute('poster', poster);
+
+        // Try to play the video. Many hosted environments block autoplay with audio,
+        // but our video is muted so it usually should work. If the play promise is
+        // rejected, show a button so the user can explicitly start playback.
+        const playBtn = document.getElementById('play-btn');
+        const overlay = document.getElementById('play-overlay');
+
+        function showPlayButton() {
+          playBtn.style.display = 'inline-block';
+          overlay.style.pointerEvents = 'auto';
+        }
+
+        function hidePlayButton() {
+          playBtn.style.display = 'none';
+          overlay.style.pointerEvents = 'none';
+        }
+
+        // Attempt to play; if autoplay is blocked the returned promise will reject
+        // and we show an explicit play button.
+        function tryPlay() {
+          const p = video.play();
+          if (p && typeof p.then === 'function') {
+            p.then(() => {
+              hidePlayButton();
+            }).catch(() => {
+              // Autoplay blocked — show UI so the user can start it
+              showPlayButton();
+            });
+          }
+        }
+
+        playBtn.addEventListener('click', function(){
+          video.muted = true; // ensure muted so play is allowed
+          video.play().then(hidePlayButton).catch(()=>{});
+        });
+
+        // Try immediately, then try again after user interaction (some browsers
+        // allow autoplay after a click anywhere).
+        tryPlay();
+        document.addEventListener('click', tryPlay, { once: true });
+      })();
+    </script>
+</body>
+</html>
+
+<!-- deploy test -->

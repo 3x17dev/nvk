@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Feestboek</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    textarea { width: 100%; height: 60vh; }
+    .status { margin: 8px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Feestboek</h1>
+  <div class="status" id="status">Connecting…</div>
+  <textarea id="box" placeholder="Start typing with your friends…"></textarea>
+
+  <script type="module">
+    import * as Y from 'https://unpkg.com/yjs@13.6.18/dist/yjs.mjs'
+    import { WebsocketProvider } from 'https://unpkg.com/y-websocket@1.5.4/dist/y-websocket.js?module'
+    import { IndexeddbPersistence } from 'https://unpkg.com/y-indexeddb@1.4.6/dist/y-indexeddb.js?module'
+
+    const room = 'feestboek'
+    const ydoc = new Y.Doc()
+    const ytext = ydoc.getText('t')
+
+    // 1) Local persistence: restores content on reload, then syncs to server/peers
+    const idb = new IndexeddbPersistence(room, ydoc)
+    const statusEl = document.getElementById('status')
+    const setStatus = (s) => statusEl.textContent = s
+
+    idb.on('synced', () => {
+      // First local load finished (from IndexedDB)
+      setStatus('Loaded local copy')
+      textarea.value = ytext.toString()
+    })
+
+    // 2) Realtime over WebSocket
+    const wsUrl =
+      (location.protocol === 'https:' ? 'wss://' : 'ws://') +
+      location.host + '/feestboek/ws'
+    const provider = new WebsocketProvider(wsUrl, room, ydoc)
+
+    provider.on('status', ({ status }) => {
+      setStatus(status === 'connected' ? 'Connected' : 'Disconnected')
+    })
+
+    // 3) Bind textarea ↔ Y.Text
+    const textarea = document.getElementById('box')
+    // Initialize from whatever we have right now (IDB may overwrite shortly)
+    textarea.value = ytext.toString()
+
+    // Simple binding (manual)
+    let applyingRemote = false
+    ytext.observe(e => {
+      // incoming remote/local updates → reflect in textarea
+      applyingRemote = true
+      textarea.value = ytext.toString()
+      applyingRemote = false
+    })
+
+    textarea.addEventListener('input', () => {
+      if (applyingRemote) return
+      // replace full content (simple, OK for a single textarea)
+      ytext.delete(0, ytext.length)
+      ytext.insert(0, textarea.value)
+    })
+
+    // Optional: save a tiny backup too
+    ytext.observe(() => {
+      try { localStorage.setItem('feestboek-backup', ytext.toString()) } catch {}
+    })
+  </script>
+</body>
+</html>
