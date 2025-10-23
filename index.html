@@ -6,6 +6,48 @@
   <title>N V K</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-video {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      z-index: 1;
+      object-fit: cover;
+    }
+    .glitch-wrap {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 20px;
+    }
+    .subtitle {
+      color: white;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0;
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      order: -1; /* This moves the subtitle to the top */
+    }
     .audio-control {
       position: fixed;
       top: 20px;
@@ -42,6 +84,20 @@
       display: none;
       background: white;
     }
+    @media (max-width: 768px) {
+      .bg-video {
+        width: 100%;
+        height: 100%;
+      }
+      .glitch-wrap {
+        width: 90%;
+        max-width: 400px;
+      }
+      .logo {
+        max-width: 80%;
+        height: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -64,9 +120,9 @@
   </div>
 
   <div class="glitch-wrap">
+    <p class="subtitle">Nieuw-Vlaemsche Kunst</p>
     <img src="media/nvk/lgo.png" alt="NVK top logo" class="logo top-logo">
     <h1 class="glitch" data-text="NVK">NVK</h1>
-    <p class="subtitle">Nieuw-Vlaemsche Kunst</p>
     <img src="media/nvk/nvk.png" alt="NVK bottom" class="logo bottom-logo">
   </div>
   
