@@ -4,39 +4,140 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>N V K</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #000;
+    }
+    .audio-control {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .audio-control button {
+      background: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .audio-control {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+    }
+    .audio-control button {
+      background: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .main-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    .video-container {
+      width: 100%;
+      max-width: 1920px;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+    video {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      max-height: 90vh;
+      display: block;
+    }
+    .title-overlay {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 2;
+    }
+    .subtitle {
+      color: white;
+      font-size: 1.2rem;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: Arial, sans-serif;
+    }
+    #play-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      pointer-events: none;
+    }
+    #play-btn {
+      pointer-events: auto;
+      padding: 0.8rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      display: none;
+      background: white;
+    }
+  </style>
 </head>
 <body>
-  <!-- Background video -->
-  <video class="bg-video" autoplay muted loop playsinline>
-    <source src="media/nvk/xxxx.mp4" type="video/mp4">
-    <!-- fallback -->
-    </video>
-  
-    <!-- A lightweight overlay prompting interaction when autoplay is blocked -->
-    <div id="play-overlay" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;">
-      <button id="play-btn" style="pointer-events:auto;padding:0.8rem 1.2rem;font-size:1rem;border-radius:6px;border:none;cursor:pointer;display:none;">Play background</button>
-    </div>
+  <div class="audio-control">
+    <button id="audio-toggle">🔇 Sound Off</button>
+  </div>
 
-  <div class="glitch-wrap">
-    <img src="media/nvk/lgo.png" alt="NVK top logo" class="logo top-logo">
-    <h1 class="glitch" data-text="NVK">NVK</h1>
-    <p class="subtitle">Nieuw-Vlaemsche Kunst</p>
-    <img src="media/nvk/nvk.png" alt="NVK bottom" class="logo bottom-logo">
+  <audio id="background-music" loop>
+    <source src="media/nvk/deuntje.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="video-container">
+    <video autoplay muted loop playsinline poster="media/nvk/lgo.png">
+      <source src="media/nvk/xxxx.mp4" type="video/mp4">
+    </video>
+    <div class="title-overlay">
+      <p class="subtitle">Nieuw-Vlaemsche Kunst</p>
+    </div>
+  </div>
+
+  <div id="play-overlay">
+    <button id="play-btn">Play video</button>
   </div>
   
     <script>
       (function(){
-        const video = document.querySelector('.bg-video');
-        // Use an existing logo as a poster so something shows if video can't load
-        const poster = 'media/nvk/lgo.png';
-        video.setAttribute('poster', poster);
-
-        // Try to play the video. Many hosted environments block autoplay with audio,
-        // but our video is muted so it usually should work. If the play promise is
-        // rejected, show a button so the user can explicitly start playback.
+        const video = document.querySelector('video');
+        const audio = document.getElementById('background-music');
         const playBtn = document.getElementById('play-btn');
         const overlay = document.getElementById('play-overlay');
+        const audioToggle = document.getElementById('audio-toggle');
+        let audioEnabled = false;
 
         function showPlayButton() {
           playBtn.style.display = 'inline-block';
@@ -48,32 +149,36 @@
           overlay.style.pointerEvents = 'none';
         }
 
-        // Attempt to play; if autoplay is blocked the returned promise will reject
-        // and we show an explicit play button.
         function tryPlay() {
           const p = video.play();
           if (p && typeof p.then === 'function') {
             p.then(() => {
               hidePlayButton();
             }).catch(() => {
-              // Autoplay blocked — show UI so the user can start it
               showPlayButton();
             });
           }
         }
 
         playBtn.addEventListener('click', function(){
-          video.muted = true; // ensure muted so play is allowed
+          video.muted = true;
           video.play().then(hidePlayButton).catch(()=>{});
         });
 
-        // Try immediately, then try again after user interaction (some browsers
-        // allow autoplay after a click anywhere).
+        audioToggle.addEventListener('click', function() {
+          audioEnabled = !audioEnabled;
+          if (audioEnabled) {
+            audio.play();
+            audioToggle.textContent = '🔊 Sound On';
+          } else {
+            audio.pause();
+            audioToggle.textContent = '🔇 Sound Off';
+          }
+        });
+
         tryPlay();
         document.addEventListener('click', tryPlay, { once: true });
       })();
     </script>
 </body>
 </html>
-
-<!-- deploy test -->
